@@ -1,0 +1,183 @@
+Chapter 1: Introduction to Machine Learning
+
+Machine learning is a subfield of artificial intelligence that enables systems to learn from data without being explicitly programmed. The fundamental premise is that systems can identify patterns, make decisions, and improve over time through experience.
+
+1.1 Types of Machine Learning
+
+There are three main paradigms in machine learning: supervised learning, unsupervised learning, and reinforcement learning.
+
+In supervised learning, the algorithm is trained on labelled data — pairs of inputs and corresponding correct outputs. The model learns to map inputs to outputs. Common examples include:
+- Image classification
+- Spam detection
+- Stock price prediction
+
+In unsupervised learning, the model receives unlabelled data and must find structure on its own. Clustering algorithms like k-means group similar data points together. Dimensionality reduction methods like PCA compress data while preserving structure.
+
+Reinforcement learning involves an agent that learns by interacting with an environment. The agent receives rewards for correct actions and penalties for incorrect ones, gradually learning an optimal policy.
+
+Chapter 2: Neural Networks and Deep Learning
+
+A neural network is a computational model inspired by the structure of biological neurons in the brain. It consists of layers of interconnected nodes, each performing a weighted sum of its inputs followed by a non-linear activation function.
+
+2.1 The Perceptron
+
+The simplest neural network is the perceptron, proposed by Frank Rosenblatt in 1958. It computes a weighted sum of its inputs, adds a bias term, and passes the result through a step function:
+
+    output = step(w^T * x + b)
+
+where w is the weight vector, x is the input vector, and b is the bias.
+
+2.2 Multi-Layer Perceptrons (MLP)
+
+By stacking multiple layers of perceptrons and using smooth activation functions (sigmoid, ReLU, tanh), we get a multi-layer perceptron. The intermediate layers are called hidden layers. The depth of a network (number of hidden layers) is what gives rise to the term "deep learning".
+
+2.3 Backpropagation
+
+The key algorithm for training neural networks is backpropagation — short for "backward propagation of errors". It uses the chain rule of calculus to compute the gradient of the loss function with respect to every weight in the network.
+
+The algorithm proceeds as:
+1. Forward pass: compute output and loss.
+2. Backward pass: compute gradients layer by layer, from output to input.
+3. Parameter update: subtract gradient × learning_rate from each weight.
+
+Backpropagation made deep networks practical by enabling efficient gradient computation.
+
+Chapter 3: Gradient Descent and Optimisation
+
+3.1 The Loss Function
+
+To train a model, we need a scalar measure of how wrong its predictions are. This is the loss function (also called cost function or objective function). For regression, we typically use Mean Squared Error (MSE):
+
+    L = (1/n) Σ (y_i - ŷ_i)²
+
+For classification, we use Cross-Entropy Loss:
+
+    L = -(1/n) Σ [y_i * log(ŷ_i) + (1 - y_i) * log(1 - ŷ_i)]
+
+3.2 Gradient Descent
+
+Gradient descent is the foundational optimisation algorithm in machine learning. The idea is to iteratively move the model parameters in the direction of steepest descent of the loss function.
+
+The update rule is:
+
+    θ ← θ - α * ∇L(θ)
+
+where θ are the parameters, α is the learning rate, and ∇L is the gradient of the loss.
+
+Variants:
+- Batch Gradient Descent: use all training examples to compute each gradient step.
+- Stochastic Gradient Descent (SGD): use one example at a time.
+- Mini-batch Gradient Descent: use a small batch (e.g., 32 or 64 examples) — best trade-off.
+
+3.3 Adaptive Optimisers
+
+Plain SGD converges slowly and is sensitive to the learning rate. Adaptive optimisers address this:
+
+Adam (Adaptive Moment Estimation) combines RMSProp and momentum:
+    m_t = β₁ * m_{t-1} + (1-β₁) * g_t       (1st moment — mean)
+    v_t = β₂ * v_{t-1} + (1-β₂) * g_t²      (2nd moment — variance)
+    θ_t = θ_{t-1} - α * m̂_t / (√v̂_t + ε)
+
+Adam is used in over 90% of modern deep learning research because it:
+- Adapts learning rates per parameter
+- Handles sparse gradients well
+- Works well with default hyperparameters (α=0.001, β₁=0.9, β₂=0.999)
+
+Chapter 4: Regularisation
+
+Overfitting occurs when a model performs well on training data but poorly on unseen data. It memorises noise instead of learning generalizable patterns.
+
+4.1 L2 Regularisation (Ridge)
+
+Add a penalty proportional to the square of the weights to the loss:
+
+    L_reg = L + λ * Σ w²
+
+This encourages small weights, reducing the model's tendency to overfit. It is equivalent to Gaussian prior on weights (Bayesian interpretation).
+
+4.2 L1 Regularisation (Lasso)
+
+Add a penalty proportional to the absolute value of weights:
+
+    L_reg = L + λ * Σ |w|
+
+L1 regularization produces sparse solutions — many weights are forced to exactly zero. This acts as a form of feature selection.
+
+4.3 Dropout
+
+Dropout is a regularisation technique specific to neural networks. During training, each neuron is randomly deactivated with probability p (typically 0.5). This prevents neurons from co-adapting and forces the network to learn redundant representations.
+
+At test time, all neurons are active, but their outputs are scaled by (1-p) to match the expected activation during training.
+
+4.4 Batch Normalisation
+
+Batch normalisation normalises the inputs to each layer by the mean and variance of the current mini-batch. This:
+- Reduces internal covariate shift
+- Allows higher learning rates
+- Acts as a mild regulariser
+- Speeds up convergence significantly
+
+Chapter 5: Convolutional Neural Networks (CNN)
+
+CNNs are specialised for grid-structured data like images. They exploit translation invariance through shared weights in convolutional filters.
+
+5.1 Convolution Operation
+
+A convolutional layer applies a set of learned filters to the input. Each filter slides across the spatial dimensions, computing element-wise products and summing them. This produces a feature map that highlights patterns the filter is sensitive to.
+
+Key hyperparameters:
+- kernel_size: size of the filter (e.g., 3×3, 5×5)
+- stride: step size of the sliding window
+- padding: adding zeros around the input to control output size
+- num_filters: how many different filters to learn (depth of the output)
+
+5.2 Pooling
+
+Pooling layers reduce the spatial dimensions of feature maps. Max pooling takes the maximum value in each region; average pooling takes the mean. This provides translation invariance and reduces computation.
+
+5.3 Famous Architectures
+
+- LeNet-5 (1998): first practical CNN, applied to digit recognition
+- AlexNet (2012): sparked the deep learning revolution, won ImageNet
+- VGG (2014): very deep networks with 3×3 convolutions
+- ResNet (2015): residual connections allowing networks of 100+ layers
+
+Chapter 6: Recurrent Neural Networks and Transformers
+
+6.1 Recurrent Neural Networks (RNN)
+
+RNNs process sequences by maintaining a hidden state that is updated at each time step:
+
+    h_t = tanh(W_hh * h_{t-1} + W_xh * x_t + b)
+    y_t = W_hy * h_t + b_y
+
+The same weights are used at every time step, allowing the network to generalise across sequence positions.
+
+6.2 Long Short-Term Memory (LSTM)
+
+Vanilla RNNs suffer from the vanishing gradient problem — gradients shrink exponentially as they propagate through many time steps, preventing learning of long-range dependencies.
+
+LSTMs solve this with a gated memory cell:
+- Forget gate: decides what to remove from memory
+- Input gate: decides what new information to store
+- Output gate: decides what to output from memory
+- Cell state: the long-term memory, protected by the gates
+
+6.3 Attention Mechanism
+
+Attention allows a model to focus on specific parts of the input when generating each output token. Instead of compressing the entire input into a fixed vector, attention computes a weighted sum over all input positions.
+
+The attention score between query q and key k is:
+    score(q, k) = (q · k) / √d_k
+
+6.4 Transformers
+
+The Transformer, introduced in "Attention Is All You Need" (Vaswani et al., 2017), replaces recurrence entirely with self-attention. Every token attends to every other token in parallel, enabling much faster training on modern hardware.
+
+Key components:
+- Multi-head self-attention
+- Positional encoding (since no recurrence, position must be injected)
+- Feed-forward sublayer
+- Layer normalisation + residual connections
+
+BERT, GPT, and T5 are all Transformer-based models that have set state-of-the-art results across NLP benchmarks.
