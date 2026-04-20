@@ -6,7 +6,7 @@ A production-grade, highly capable RAG (Retrieval-Augmented Generation) infrastr
 
 ## 🚀 Key Improvements (v2.0)
 
-This version includes two major engineering upgrades requested for high-performance testing:
+This version includes three major engineering upgrades:
 
 1.  **🚀 Intelligent Embedding Cache**: Uses SHA-256 document hashing to store computed vectors in `.cache/embeddings/`. Subsequent queries on the same document are **99% faster** (milliseconds instead of minutes).
 2.  **🎯 Hybrid Search (SBERT + BM25)**: Combines Semantic (Context) and Lexical (Keyword) search. It uses SBERT to understand "meaning" and BM25 to ensure exact technical terms and variable names are never missed.
@@ -68,7 +68,23 @@ graph TD
 
 ## 💻 Installation & Usage
 
-### Standard Installation
+### 🌐 Option A: Web Interface (Recommended)
+This version provides a premium dark-themed UI for drag-and-drop analysis.
+
+**Using Docker:**
+```bash
+# 1. Build the image
+docker build -t chunkiq-web .
+
+# 2. Run the server
+docker run -p 7860:7860 chunkiq-web
+```
+Visit **`http://localhost:7860`** in your browser.
+
+---
+
+### 💻 Option B: Command Line Interface (CLI)
+**Using Local Environment:**
 ```bash
 # 1. Setup Venv
 python3 -m venv venv
@@ -77,22 +93,22 @@ source venv/bin/activate
 # 2. Install
 pip install -r requirements.txt
 
-# 3. Run
+# 3. Run Analysis
 python main.py --doc textbook.pdf --query "How does backpropagation work?"
-```
-
-### Docker Implementation (Shareable)
-```bash
-# 1. Build (Downloads PyTorch/Models into the image)
-docker build -t intelligent-chunker .
-
-# 2. Run with Volume Mapping
-docker run -v $(pwd):/data intelligent-chunker --doc /data/textbook.pdf --query "What is SGD?"
 ```
 
 ---
 
-## 📂 Output Specification
+## 🚀 How to Use the Web UI
+1. **Upload**: Drag and drop your PDF or TXT file into the upload zone.
+2. **Query**: Type your question in the text area (e.g., "What is the vanishing gradient problem?").
+3. **Analyze**: Click the **Analyze Document** button. 
+4. **Compare**: View the "Strategy Comparison" grid to see which chunking method performed best.
+5. **Results**: Scroll down to see the exact text chunks retrieved from your document.
+
+---
+
+## 📂 Output Specification (API)
 The system returns a structured dictionary:
 ```json
 {
