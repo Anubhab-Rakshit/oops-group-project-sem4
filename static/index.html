@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChunkIQ — Intelligent Document Retrieval</title>
+  <meta name="description" content="Upload any document and find the most relevant information instantly using three AI-powered chunking strategies." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #030712;
+      --surface:   rgba(15, 23, 42, 0.85);
+      --border:    rgba(99, 102, 241, 0.25);
+      --indigo:    #6366f1;
+      --violet:    #8b5cf6;
+      --cyan:      #06b6d4;
+      --amber:     #f59e0b;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --success:   #10b981;
+      --radius:    14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 90%, rgba(6,182,212,0.10) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Header ── */
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text {
+      font-size: 22px; font-weight: 800;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo-badge {
+      margin-left: 8px;
+      font-size: 10px; font-weight: 600;
+      color: var(--cyan);
+      background: rgba(6,182,212,0.12);
+      border: 1px solid rgba(6,182,212,0.3);
+      padding: 2px 8px; border-radius: 20px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+
+    /* ── Hero ── */
+    .hero { text-align: center; padding: 60px 0 48px; }
+    .hero h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--indigo), var(--violet), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p { margin-top: 16px; color: var(--muted); font-size: 17px; max-width: 560px; margin-inline: auto; line-height: 1.6; }
+
+    /* ── Glass Card ── */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    /* ── Input Section ── */
+    .input-section { display: grid; gap: 16px; max-width: 780px; margin: 0 auto 56px; }
+
+    /* Drop Zone */
+    .drop-zone {
+      padding: 40px 24px;
+      border: 2px dashed rgba(99,102,241,0.4);
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--indigo);
+      background: rgba(99,102,241,0.07);
+      transform: scale(1.01);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 36px; margin-bottom: 10px; }
+    .drop-title { font-weight: 600; font-size: 15px; }
+    .drop-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .drop-filename {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--cyan);
+      background: rgba(6,182,212,0.1);
+      border-radius: 6px;
+      padding: 4px 12px;
+      display: inline-block;
+    }
+
+    /* Query input */
+    .query-row { display: flex; gap: 12px; align-items: flex-start; }
+    .query-input {
+      flex: 1;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      resize: none;
+      min-height: 56px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .query-input:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    .query-input::placeholder { color: var(--muted); }
+
+    /* Top-K selector */
+    .topk-select {
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      height: 56px;
+      outline: none;
+      cursor: pointer;
+      min-width: 90px;
+    }
+
+    /* Analyze button */
+    .btn-analyze {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(90deg, var(--indigo), var(--violet), var(--cyan));
+      background-size: 200%;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-position 0.4s, transform 0.15s, opacity 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn-analyze:hover { background-position: right; transform: translateY(-1px); }
+    .btn-analyze:active { transform: translateY(0); }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Loading ── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .loading.visible { display: block; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(99,102,241,0.2);
+      border-top-color: var(--indigo);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-msg { color: var(--muted); font-size: 14px; }
+
+    /* ── Error ── */
+    .error-box {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: #fca5a5;
+      font-size: 14px;
+    }
+    .error-box.visible { display: block; }
+
+    /* ── Results ── */
+    .results { display: none; }
+    .results.visible { display: block; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* Strategy cards */
+    .strategies { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 32px; }
+    @media(max-width: 680px) { .strategies { grid-template-columns: 1fr; } }
+
+    .strategy-card {
+      padding: 22px 20px;
+      border-radius: var(--radius);
+      background: rgba(15,23,42,0.85);
+      border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .strategy-card:hover { transform: translateY(-3px); }
+    .strategy-card.winner {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.3), 0 8px 32px rgba(245,158,11,0.12);
+    }
+
+    .winner-badge {
+      display: none;
+      position: absolute;
+      top: -11px; right: 16px;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      color: #000;
+      font-size: 9px; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .strategy-card.winner .winner-badge { display: block; }
+
+    .card-name {
+      font-weight: 700; font-size: 15px; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon { font-size: 18px; }
+    .card-chunks { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+    .card-label { font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+
+    .score-bar-wrap {
+      background: rgba(255,255,255,0.06);
+      border-radius: 20px; height: 6px;
+      overflow: hidden; margin-bottom: 4px;
+    }
+    .score-bar {
+      height: 100%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan));
+      width: 0%; transition: width 1s cubic-bezier(0.22,1,0.36,1);
+    }
+    .strategy-card.winner .score-bar {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+    .score-val { font-size: 22px; font-weight: 700; margin-top: 10px; }
+    .strategy-card.winner .score-val { color: var(--amber); }
+
+    /* Best banner */
+    .best-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px; border-radius: var(--radius);
+      background: linear-gradient(90deg, rgba(99,102,241,0.15), rgba(6,182,212,0.10));
+      border: 1px solid rgba(99,102,241,0.3);
+      margin-bottom: 32px;
+    }
+    .best-label { font-size: 13px; color: var(--muted); }
+    .best-strategy { font-size: 18px; font-weight: 700; color: var(--indigo); }
+    .best-score-pill {
+      background: rgba(16,185,129,0.15);
+      color: var(--success);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 14px; font-weight: 600;
+    }
+
+    /* Chunks */
+    .chunks-section { margin-bottom: 60px; }
+    .chunk-item {
+      padding: 18px 20px;
+      border-radius: var(--radius);
+      background: rgba(15,23,42,0.7);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .chunk-item:hover { border-color: rgba(99,102,241,0.5); }
+    .chunk-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .chunk-num { font-size: 12px; font-weight: 600; color: var(--indigo); }
+    .chunk-score-pill {
+      font-size: 11px; font-weight: 600;
+      background: rgba(99,102,241,0.12);
+      color: var(--indigo);
+      border-radius: 20px;
+      padding: 2px 10px;
+    }
+    .chunk-text { font-size: 14px; line-height: 1.65; color: #cbd5e1; }
+    .chunk-text.collapsed { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .chunk-toggle {
+      background: none; border: none; color: var(--indigo); font-size: 12px; font-weight: 600;
+      cursor: pointer; padding: 6px 0 0; font-family: inherit;
+    }
+    .btn-copy {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 8px; padding: 5px 10px;
+      font-size: 12px; color: var(--muted); cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-copy:hover { background: rgba(99,102,241,0.2); color: var(--text); }
+    .btn-copy.copied { color: var(--success); border-color: rgba(16,185,129,0.4); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--indigo); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- Header -->
+  <header>
+    <div class="logo-icon">🧠</div>
+    <span class="logo-text">ChunkIQ</span>
+    <span class="logo-badge">v2.0</span>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Retrieve <span>Smarter</span>,<br/>Not Harder</h1>
+    <p>Upload any document and instantly find the most relevant information using three AI-powered chunking strategies with Hybrid Search.</p>
+  </section>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="drop-zone glass" id="dropZone">
+      <input type="file" id="fileInput" accept=".txt,.pdf,.json" />
+      <div class="drop-icon">📄</div>
+      <div class="drop-title">Drop your document here</div>
+      <div class="drop-sub">Supports PDF, TXT, JSON — up to 200+ pages</div>
+      <div class="drop-filename" id="fileName" style="display:none;"></div>
+    </div>
+
+    <div class="query-row">
+      <textarea class="query-input" id="queryInput" placeholder="Ask your question… e.g. How does backpropagation work?" rows="2"></textarea>
+      <select class="topk-select glass" id="topK" title="Top-K chunks to retrieve">
+        <option value="3">Top 3</option>
+        <option value="5" selected>Top 5</option>
+        <option value="7">Top 7</option>
+        <option value="10">Top 10</option>
+      </select>
+    </div>
+
+    <button class="btn-analyze" id="analyzeBtn">⚡ Analyze Document</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p class="loading-msg" id="loadingMsg">Loading AI models and chunking document…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box glass" id="errorBox"></div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <p class="section-title">Strategy Comparison</p>
+    <div class="strategies" id="strategiesGrid"></div>
+
+    <div class="best-banner glass" id="bestBanner">
+      <div>
+        <div class="best-label">Best Performing Strategy</div>
+        <div class="best-strategy" id="bestStrategyName">—</div>
+      </div>
+      <div class="best-score-pill" id="bestScorePill">—</div>
+    </div>
+
+    <p class="section-title">Top Retrieved Chunks</p>
+    <div class="chunks-section" id="chunksContainer"></div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <p>ChunkIQ — Semantic · Structure-Aware · Overlap chunking with Hybrid BM25+SBERT retrieval &nbsp;|&nbsp; <a href="https://github.com/Anubhab-Rakshit/oops-group-project-sem4" target="_blank">GitHub</a></p>
+</footer>
+
+<script>
+  // ── Constants ──────────────────────────────────────────────────────────────
+  const API_BASE = '';  // Same origin — FastAPI serves both frontend + API
+
+  const STRATEGY_META = {
+    semantic:        { label: 'Semantic',        icon: '🧠', desc: 'Embedding-distance breakpoints' },
+    structure_aware: { label: 'Structure-Aware', icon: '📑', desc: 'Heading & section detection' },
+    overlap:         { label: 'Overlap',          icon: '🔗', desc: 'Sliding window with 20% overlap' },
+  };
+
+  // ── DOM refs ────────────────────────────────────────────────────────────────
+  const dropZone    = document.getElementById('dropZone');
+  const fileInput   = document.getElementById('fileInput');
+  const fileName    = document.getElementById('fileName');
+  const queryInput  = document.getElementById('queryInput');
+  const topK        = document.getElementById('topK');
+  const analyzeBtn  = document.getElementById('analyzeBtn');
+  const loading     = document.getElementById('loading');
+  const loadingMsg  = document.getElementById('loadingMsg');
+  const errorBox    = document.getElementById('errorBox');
+  const results     = document.getElementById('results');
+  const strategiesGrid = document.getElementById('strategiesGrid');
+  const bestBanner  = document.getElementById('bestBanner');
+  const bestStrategyName = document.getElementById('bestStrategyName');
+  const bestScorePill    = document.getElementById('bestScorePill');
+  const chunksContainer  = document.getElementById('chunksContainer');
+
+  let selectedFile = null;
+
+  // ── File handling ────────────────────────────────────────────────────────────
+  fileInput.addEventListener('change', () => {
+    selectedFile = fileInput.files[0];
+    updateFileName();
+  });
+
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    selectedFile = e.dataTransfer.files[0];
+    updateFileName();
+  });
+
+  function updateFileName() {
+    if (selectedFile) {
+      fileName.textContent = '📎 ' + selectedFile.name;
+      fileName.style.display = 'inline-block';
+    }
+  }
+
+  // ── Analyze ─────────────────────────────────────────────────────────────────
+  analyzeBtn.addEventListener('click', async () => {
+    const query = queryInput.value.trim();
+    if (!selectedFile) return showError('Please upload a document first.');
+    if (!query)        return showError('Please enter a query.');
+
+    setLoading(true);
+    hideResults();
+    hideError();
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('query', query);
+    formData.append('top_k', topK.value);
+
+    try {
+      const res = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Server error');
+      }
+      const data = await res.json();
+      renderResults(data);
+    } catch (err) {
+      showError(err.message || 'Something went wrong. Is the API running?');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+  function renderResults(data) {
+    strategiesGrid.innerHTML = '';
+
+    const ORDER = ['semantic', 'structure_aware', 'overlap'];
+
+    ORDER.forEach(key => {
+      const res = data.results[key];
+      const meta = STRATEGY_META[key];
+      const isWinner = key === data.best_strategy;
+      const topScore = res.similarity_scores?.[0] ?? 0;
+
+      const card = document.createElement('div');
+      card.className = 'strategy-card glass' + (isWinner ? ' winner' : '');
+      card.innerHTML = `
+        <span class="winner-badge">★ Best</span>
+        <div class="card-name"><span class="card-icon">${meta.icon}</span>${meta.label}</div>
+        <div class="card-chunks">${res.num_chunks ?? '—'} chunks · ${res.cached ? '⚡ cached' : '🔄 computed'}</div>
+        <div class="card-label">Avg Similarity Score</div>
+        <div class="score-bar-wrap"><div class="score-bar" data-pct="${(res.avg_score * 100).toFixed(1)}"></div></div>
+        <div class="score-val">${res.avg_score.toFixed(4)}</div>
+      `;
+      strategiesGrid.appendChild(card);
+    });
+
+    // Animate score bars after render
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.score-bar').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+    });
+
+    // Best banner
+    const bestMeta = STRATEGY_META[data.best_strategy];
+    bestStrategyName.textContent = `${bestMeta?.icon} ${bestMeta?.label}`;
+    bestScorePill.textContent = `Score: ${data.final_score.toFixed(4)}`;
+
+    // Top chunks
+    chunksContainer.innerHTML = '';
+    data.best_chunks.forEach((chunk, i) => {
+      const score = data.results[data.best_strategy]?.similarity_scores?.[i] ?? 0;
+      const div = document.createElement('div');
+      div.className = 'chunk-item glass';
+      div.innerHTML = `
+        <button class="btn-copy" data-text="${encodeURIComponent(chunk)}">Copy</button>
+        <div class="chunk-header">
+          <span class="chunk-num">Chunk ${i + 1}</span>
+          <span class="chunk-score-pill">Score: ${score.toFixed(4)}</span>
+        </div>
+        <div class="chunk-text collapsed" id="ct-${i}">${escapeHtml(chunk)}</div>
+        <button class="chunk-toggle" data-target="ct-${i}" data-expanded="false">Show more ▼</button>
+      `;
+      chunksContainer.appendChild(div);
+    });
+
+    // Toggle chunk expand
+    chunksContainer.querySelectorAll('.chunk-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.target);
+        const expanded = btn.dataset.expanded === 'true';
+        target.classList.toggle('collapsed', expanded);
+        btn.dataset.expanded = String(!expanded);
+        btn.textContent = expanded ? 'Show more ▼' : 'Show less ▲';
+      });
+    });
+
+    // Copy buttons
+    chunksContainer.querySelectorAll('.btn-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(decodeURIComponent(btn.dataset.text));
+        btn.textContent = 'Copied ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    });
+
+    results.classList.add('visible');
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function setLoading(on) {
+    analyzeBtn.disabled = on;
+    analyzeBtn.textContent = on ? '⏳ Analyzing…' : '⚡ Analyze Document';
+    loading.classList.toggle('visible', on);
+    if (on) {
+      let msgs = [
+        'Loading AI models…',
+        'Chunking document using 3 strategies…',
+        'Generating embeddings (this can take a minute)…',
+        'Running Hybrid BM25 + Semantic search…',
+        'Ranking results…'
+      ];
+      let i = 0;
+      window._loadingInterval = setInterval(() => {
+        loadingMsg.textContent = msgs[Math.min(i++, msgs.length - 1)];
+      }, 4000);
+    } else {
+      clearInterval(window._loadingInterval);
+    }
+  }
+
+  function showError(msg) { errorBox.textContent = '⚠️ ' + msg; errorBox.classList.add('visible'); }
+  function hideError() { errorBox.classList.remove('visible'); }
+  function hideResults() { results.classList.remove('visible'); }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
