@@ -1,0 +1,10 @@
+services:
+  chunker:
+    build: .
+    image: intelligent-chunker:latest
+    volumes:
+      - .:/app
+      # Map a local 'data' folder to the container's '/data' for easy file access
+      - ./data:/data
+    environment:
+      - HF_HOME=/app/.hf_cache
